@@ -23,10 +23,9 @@ install.packages("assertthat")
 install.packages("microbenchmark")
 ```
 
-
 ## Nepotism in Italian Academia
 
-In Italy, all professorships are tenured, and funded by the government. To become a professor, the candidate has to be the winner of a competition (*concorso*). Unfortunately, certain professors (*baroni*) are able to manipulate the proceedings of the competition, to make "their"" candidate win irrespective of merit. In documented lawsuits, professors influenced competitions to make their relatives (spouses, children) win. 
+In Italy, all professorships are tenured, and funded by the government. To become a professor, the candidate has to be the winner of a competition (*concorso*). Unfortunately, certain professors (*baroni*) are able to manipulate the proceedings of the competition, to make "their" candidate win irrespective of merit. In documented lawsuits, professors influenced competitions to make their relatives (spouses, children) win. 
 
 How prevalent are nepotistic hires? I have attempted to measure this phenomenon in [Allesina (PLoS One 2011)](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0021160) and [Grilli & Allesina (PNAS 2017)](http://www.pnas.org/content/114/29/7600).
 
@@ -64,9 +63,9 @@ Typically, the **power of the *barone* is limited** to their own department/disc
 
 ## Idea of the analysis
 
-**If nepotism is rampant** in certain disciplines, **we should observe a scarcity of last names**. Analyzing disciplines are good because  they are quite uniform geographically, and Italian names tend to be regional.
+**If nepotism is rampant** in certain disciplines, **we should observe a scarcity of last names**. Analyzing disciplines is good because researcher are uniformly spread geographically, and Italian names tend to be regional.
 
-We can take a discipline, count the number of people, and the number of last names. Then we can repeatedly sample the same number of people at random, and compute an approximate p-value by measuring how many times do we observe fewer last names in the random sample than in the actual data.
+We can take a discipline, count the number of people, and the number of last names. Then, we can repeatedly sample the same number of people at random, and compute an approximate p-value by measuring how many times do we observe fewer last names in the random sample than in the actual data.
 
 ## Getting the data
 
@@ -92,7 +91,7 @@ We're going to write a function that takes the name of a discipline, and counts 
 sort(unique(df$sector))
 ```
 
-Let's start with medicine (`Med`)
+For example, we can analyze medicine (`Med`)
 
 ```{r}
 discipline <- "Med"
@@ -129,7 +128,7 @@ You can come up with more inventive ways to write the same function. However, we
 
 ## Unit testing
 
-When you write code, you typically test it thoroughly. The idea of unit testing is to save the tests you would run so that they can be re-run every time you modify the code. If the modified code still passes all the tests, chances are it's still correct. 
+When you write code, you typically test it thoroughly. The idea of unit testing is to save the tests you would run, so that they can be re-run every time you modify the code. If the modified code still passes all the tests, chances are it's still correct. 
 
 Of course, unit testing is only as good as the tests are. Writing a large number of tests probing different situations would ensure that no bugs went unnoticed. 
 
@@ -230,7 +229,38 @@ compute_p_value(shortlink, "Med")
 compute_p_value(shortlink, "Phys")
 ```
 
+## Checking the input: assertions
+
+Many bugs sneak in because you are passing the wrong type of argument to a function. You want the code to fail whenever something is not right. You can use assertions to control the quality and type of the input. 
+```{r}
+library(assertthat)
+```
+
+```{r, eval=FALSE}
+# this will pass
+probability <- 0
+# check the type of a variable
+assert_that(is.numeric(probability))
+# probabilities cannot be negative!
+assert_that(probability >= 0.0)
+# probabilities cannot larger than 1!
+assert_that(probability <= 1.0)
+```
+
+```{r, eval=FALSE}
+# this will pass
+probability <- -0.12
+# check the type of a variable
+assert_that(is.numeric(probability))
+# probabilities cannot be negative!
+assert_that(probability >= 0.0)
+# probabilities cannot larger than 1!
+assert_that(probability <= 1.0)
+```
+
 ## Add randomizations to compute p-values
+
+We can add the randomization part to our code, and use assertions to check the quality of the input:
 
 ```{r}
 count_names_unique <- function(last_names){
@@ -240,8 +270,11 @@ count_names_unique <- function(last_names){
 compute_p_value <- function(filename, discipline = "Med", nrand = 1000){
   # read the data
   df <- read.csv(filename, stringsAsFactors = FALSE)
+  assert_that(is.data.frame(df))
+  assert_that(nrow(df) > 1)
   # extract names and count people and names
   last_names <- df$last_id[df$sector == discipline]
+  assert_that(length(last_names) > 0)
   num_people <- length(last_names)
   num_names <- count_names_unique(last_names)
   # compute pvalue
@@ -277,11 +310,18 @@ compute_p_value(shortlink, "Phys", 1000)
 
 - Try running the code with 100,000 randomizations: do you ever observe a lower number of names in `Med`? And in `Phys`?
 
-- Try using `https://raw.githubusercontent.com/StefanoAllesina/namepairs/master/data/us_2016.csv`: what happens in `Hum`? Why?
+- Modify the code such that it uses first names (`first_id`) instead of last names. Run the randomizations for the humanities (`Hum`) and industrial engineering (`Eng-Ind`): why do you observe a scarcity of first names in engineering, but an excess in the humanities?
 
 ## Summary
 
 - Most bugs sneak in when you modify the code, not when you write it
-- Unit testing helps a lot in these cases
+- Unit testing helps in these cases: you can automatically check the code every time you make changes
+- Test-driven development: write the tests before writing the code!
+- Another common source of bugs is input with unexpected features: using assertions, you can make sure the input is of the right type
+- Good strategies for avoiding bugs:
+  * Pair programming
+  * Code reviews
+  
+  
 
 

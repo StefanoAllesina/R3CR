@@ -342,7 +342,7 @@ install.packages(&quot;microbenchmark&quot;)</code></pre>
 </section>
 <section id="nepotism-in-italian-academia" class="level2">
 <h2>Nepotism in Italian Academia</h2>
-<p>In Italy, all professorships are tenured, and funded by the government. To become a professor, the candidate has to be the winner of a competition (<em>concorso</em>). Unfortunately, certain professors (<em>baroni</em>) are able to manipulate the proceedings of the competition, to make “their”&quot; candidate win irrespective of merit. In documented lawsuits, professors influenced competitions to make their relatives (spouses, children) win.</p>
+<p>In Italy, all professorships are tenured, and funded by the government. To become a professor, the candidate has to be the winner of a competition (<em>concorso</em>). Unfortunately, certain professors (<em>baroni</em>) are able to manipulate the proceedings of the competition, to make “their” candidate win irrespective of merit. In documented lawsuits, professors influenced competitions to make their relatives (spouses, children) win.</p>
 <p>How prevalent are nepotistic hires? I have attempted to measure this phenomenon in <a href="http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0021160">Allesina (PLoS One 2011)</a> and <a href="http://www.pnas.org/content/114/29/7600">Grilli &amp; Allesina (PNAS 2017)</a>.</p>
 </section>
 <section id="facts-about-last-names-and-nepotistic-hires" class="level2">
@@ -374,8 +374,8 @@ install.packages(&quot;microbenchmark&quot;)</code></pre>
 </section>
 <section id="idea-of-the-analysis" class="level2">
 <h2>Idea of the analysis</h2>
-<p><strong>If nepotism is rampant</strong> in certain disciplines, <strong>we should observe a scarcity of last names</strong>. Analyzing disciplines are good because they are quite uniform geographically, and Italian names tend to be regional.</p>
-<p>We can take a discipline, count the number of people, and the number of last names. Then we can repeatedly sample the same number of people at random, and compute an approximate p-value by measuring how many times do we observe fewer last names in the random sample than in the actual data.</p>
+<p><strong>If nepotism is rampant</strong> in certain disciplines, <strong>we should observe a scarcity of last names</strong>. Analyzing disciplines is good because researcher are uniformly spread geographically, and Italian names tend to be regional.</p>
+<p>We can take a discipline, count the number of people, and the number of last names. Then, we can repeatedly sample the same number of people at random, and compute an approximate p-value by measuring how many times do we observe fewer last names in the random sample than in the actual data.</p>
 </section>
 <section id="getting-the-data" class="level2">
 <h2>Getting the data</h2>
@@ -413,7 +413,7 @@ head(df)</code></pre>
 ##  [5] &quot;Eng-Civ&quot;      &quot;Eng-Ind&quot;      &quot;Geo&quot;          &quot;Hist-Ped-Psi&quot;
 ##  [9] &quot;Hum&quot;          &quot;Law&quot;          &quot;Math&quot;         &quot;Med&quot;         
 ## [13] &quot;Phys&quot;         &quot;Soc&quot;</code></pre>
-<p>Let’s start with medicine (<code>Med</code>)</p>
+<p>For example, we can analyze medicine (<code>Med</code>)</p>
 <pre class="r"><code>discipline &lt;- &quot;Med&quot;</code></pre>
 <p>We want to count how many people are in Medicine. We can extract the last names and count them:</p>
 <pre class="r"><code>last_names &lt;- df$last_id[df$sector == discipline]
@@ -429,18 +429,18 @@ count_names_unique &lt;- function(last_names){
 <pre class="r"><code>library(microbenchmark)
 microbenchmark(count_names_table(last_names), count_names_unique(last_names))</code></pre>
 <pre><code>## Unit: microseconds
-##                            expr      min        lq      mean    median
-##   count_names_table(last_names) 6711.443 6860.5190 7240.8912 7054.3535
-##  count_names_unique(last_names)  372.565  375.5965  416.3941  377.2805
+##                            expr      min        lq      mean   median
+##   count_names_table(last_names) 6776.804 6913.6980 7267.6674 7042.704
+##  count_names_unique(last_names)  372.351  375.6005  414.1416  377.488
 ##        uq      max neval
-##  7412.927 8620.377   100
-##   391.099 1391.061   100</code></pre>
+##  7430.436 8585.223   100
+##   387.878 1610.198   100</code></pre>
 <p>You can see that the difference is huge! It takes about 18 times longer to perform the same operation using <code>count_names_table</code>.</p>
 <p>You can come up with more inventive ways to write the same function. However, we need to make sure that the code is correct. How can we test it?</p>
 </section>
 <section id="unit-testing" class="level2">
 <h2>Unit testing</h2>
-<p>When you write code, you typically test it thoroughly. The idea of unit testing is to save the tests you would run so that they can be re-run every time you modify the code. If the modified code still passes all the tests, chances are it’s still correct.</p>
+<p>When you write code, you typically test it thoroughly. The idea of unit testing is to save the tests you would run, so that they can be re-run every time you modify the code. If the modified code still passes all the tests, chances are it’s still correct.</p>
 <p>Of course, unit testing is only as good as the tests are. Writing a large number of tests probing different situations would ensure that no bugs went unnoticed.</p>
 <p>The library <code>testthat</code> facilitates the use of unit testing in <code>R</code>. Here’s a brief intro.</p>
 <section id="expectations" class="level3">
@@ -514,8 +514,30 @@ compute_p_value(shortlink, &quot;Med&quot;)</code></pre>
 <pre><code>##   discipline num_people num_names
 ## 1       Phys       2408      2125</code></pre>
 </section>
+<section id="checking-the-input-assertions" class="level2">
+<h2>Checking the input: assertions</h2>
+<p>Many bugs sneak in because you are passing the wrong type of argument to a function. You want the code to fail whenever something is not right. You can use assertions to control the quality and type of the input.</p>
+<pre class="r"><code>library(assertthat)</code></pre>
+<pre class="r"><code># this will pass
+probability &lt;- 0
+# check the type of a variable
+assert_that(is.numeric(probability))
+# probabilities cannot be negative!
+assert_that(probability &gt;= 0.0)
+# probabilities cannot larger than 1!
+assert_that(probability &lt;= 1.0)</code></pre>
+<pre class="r"><code># this will pass
+probability &lt;- -0.12
+# check the type of a variable
+assert_that(is.numeric(probability))
+# probabilities cannot be negative!
+assert_that(probability &gt;= 0.0)
+# probabilities cannot larger than 1!
+assert_that(probability &lt;= 1.0)</code></pre>
+</section>
 <section id="add-randomizations-to-compute-p-values" class="level2">
 <h2>Add randomizations to compute p-values</h2>
+<p>We can add the randomization part to our code, and use assertions to check the quality of the input:</p>
 <pre class="r"><code>count_names_unique &lt;- function(last_names){
   return(length(unique(last_names)))
 }
@@ -523,8 +545,11 @@ compute_p_value(shortlink, &quot;Med&quot;)</code></pre>
 compute_p_value &lt;- function(filename, discipline = &quot;Med&quot;, nrand = 1000){
   # read the data
   df &lt;- read.csv(filename, stringsAsFactors = FALSE)
+  assert_that(is.data.frame(df))
+  assert_that(nrow(df) &gt; 1)
   # extract names and count people and names
   last_names &lt;- df$last_id[df$sector == discipline]
+  assert_that(length(last_names) &gt; 0)
   num_people &lt;- length(last_names)
   num_names &lt;- count_names_unique(last_names)
   # compute pvalue
@@ -554,10 +579,31 @@ compute_p_value &lt;- function(filename, discipline = &quot;Med&quot;, nrand = 1
 shortlink &lt;- &quot;https://bit.ly/2HO6nSC&quot;
 compute_p_value(shortlink, &quot;Med&quot;, 1000)</code></pre>
 <pre><code>##   discipline num_people num_names expected_names pvalue
-## 1        Med       9559      6718       7045.268      0</code></pre>
+## 1        Med       9559      6718       7046.597      0</code></pre>
 <pre class="r"><code>compute_p_value(shortlink, &quot;Phys&quot;, 1000)</code></pre>
 <pre><code>##   discipline num_people num_names expected_names pvalue
-## 1       Phys       2408      2125       2146.675  0.084</code></pre>
+## 1       Phys       2408      2125       2146.026  0.096</code></pre>
+</section>
+<section id="try-by-yourself" class="level2">
+<h2>Try by yourself</h2>
+<ul>
+<li><p>Try running the code with 100,000 randomizations: do you ever observe a lower number of names in <code>Med</code>? And in <code>Phys</code>?</p></li>
+<li><p>Modify the code such that it uses first names (<code>first_id</code>) instead of last names. Run the randomizations for the humanities (<code>Hum</code>) and industrial engineering (<code>Eng-Ind</code>): why do you observe a scarcity of first names in engineering, but an excess in the humanities?</p></li>
+</ul>
+</section>
+<section id="summary" class="level2">
+<h2>Summary</h2>
+<ul>
+<li>Most bugs sneak in when you modify the code, not when you write it</li>
+<li>Unit testing helps in these cases: you can automatically check the code every time you make changes</li>
+<li>Test-driven development: write the tests before writing the code!</li>
+<li>Another common source of bugs is input with unexpected features: using assertions, you can make sure the input is of the right type</li>
+<li>Good strategies for avoiding bugs:
+<ul>
+<li>Pair programming</li>
+<li>Code reviews</li>
+</ul></li>
+</ul>
 </section>
 
 
